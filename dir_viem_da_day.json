@@ -1,0 +1,14 @@
+{
+    "dirs": [
+        {
+            "type": "segmentation",
+            "damage_label": 5,
+            "segmentation_label": 5,
+            "location": "/home/kc/manhnd/DATA/viem_da_day_20220418",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }
+    ]
+}

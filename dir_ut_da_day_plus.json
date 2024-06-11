@@ -1,0 +1,50 @@
+{
+    "dirs": [
+        {
+            "type": "segmentation",
+            "damage_label": 4,
+            "segmentation_label": 4,
+            "location": "/home/kc/manhnd/DATA/ung_thu_da_day_20220110",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "damage_label": 4,
+            "segmentation_label": 4,
+            "location": "/home/kc/manhnd/new_data/ut_da_day_1",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "damage_label": 4,
+            "segmentation_label": 4,
+            "location": "/home/kc/manhnd/new_data/ut_da_day_2",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "damage_label": 4,
+            "segmentation_label": 4,
+            "location": "/home/kc/manhnd/new_data/ut_da_day_5",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "damage_label": 4,
+            "segmentation_label": 4,
+            "location": "/home/kc/manhnd/new_data/ut_da_day_9",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }
+    ]
+}

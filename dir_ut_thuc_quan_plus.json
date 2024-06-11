@@ -1,0 +1,55 @@
+{
+    "dirs": [
+        {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/DATA/UT thuc quan/20211021 UT thuc quan",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/new_data/ut_thuc_quan_1",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/new_data/ut_thuc_quan_2",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/new_data/ut_thuc_quan_5",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }, {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/new_data/ut_thuc_quan_9",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }
+    ]
+}

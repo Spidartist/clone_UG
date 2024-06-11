@@ -1,0 +1,105 @@
+{
+    "dirs": [
+        {
+            "type": "classification",
+            "position_label": 0,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/1 Hau hong"
+        }, {
+            "type": "classification",
+            "position_label": 1,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/2 Thuc quan"
+        }, {
+            "type": "classification",
+            "position_label": 2,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/3 Tam vi"
+        }, {
+            "type": "classification",
+            "position_label": 3,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/4 Than vi"
+        }, {
+            "type": "classification",
+            "position_label": 4,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/5 Phinh vi"
+        }, {
+            "type": "classification",
+            "position_label": 5,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/6 Hang vi"
+        }, {
+            "type": "classification",
+            "position_label": 6,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/7 Bo cong lon"
+        }, {
+            "type": "classification",
+            "position_label": 7,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/8 Bo cong nho"
+        }, {
+            "type": "classification",
+            "position_label": 8,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/9 Hanh ta trang"
+        }, {
+            "type": "classification",
+            "position_label": 9,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/DATA/Vi tri giai phau/10 Ta trang"
+        }, {
+            "type": "classification",
+            "position_label": 0,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/1 Hau hong"
+        }, {
+            "type": "classification",
+            "position_label": 1,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/2 Thuc quan"
+        }, {
+            "type": "classification",
+            "position_label": 2,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/3 Tam vi"
+        }, {
+            "type": "classification",
+            "position_label": 3,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/4 Than vi"
+        }, {
+            "type": "classification",
+            "position_label": 4,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/5 Phinh vi"
+        }, {
+            "type": "classification",
+            "position_label": 5,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/6 Hang vi"
+        }, {
+            "type": "classification",
+            "position_label": 6,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/7 Bo cong lon"
+        }, {
+            "type": "classification",
+            "position_label": 7,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/8 Bo cong nho"
+        }, {
+            "type": "classification",
+            "position_label": 8,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/9 Hanh ta trang"
+        }, {
+            "type": "classification",
+            "position_label": 9,
+            "damage_label": 0,
+            "location": "/home/kc/manhnd/new_data/target_LCI/10 Ta trang"
+        }
+    ]
+}

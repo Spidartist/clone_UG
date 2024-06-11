@@ -1,0 +1,15 @@
+{
+    "dirs": [
+        {
+            "type": "segmentation",
+            "position_label": 1,
+            "damage_label": 1,
+            "segmentation_label": 1,
+            "location": "/home/kc/manhnd/DATA/UT thuc quan/20211021 UT thuc quan",
+            "img_folder_name": "images",
+            "img_file_extension": ".jpeg",
+            "mask_folder_name": "mask_images",
+            "mask_file_extension": ".png"
+        }
+    ]
+}
