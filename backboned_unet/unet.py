@@ -110,10 +110,10 @@ class UpsampleBlock(nn.Module):
             x = self.relu(x)
 
         if skip_connection is not None:
-            print(f"x.shape: {x.shape}")
-            print(f"skip_connection.shape: {skip_connection.shape}")
+            # print(f"x.shape: {x.shape}")
+            # print(f"skip_connection.shape: {skip_connection.shape}")
             x = torch.cat([x, skip_connection], dim=1)
-            print(f"After concat x.shape: {x.shape}")
+            # print(f"After concat x.shape: {x.shape}")
 
         if not self.parametric:
             x = self.conv1(x)
@@ -179,7 +179,7 @@ class Unet(nn.Module):
         decoder_filters_in = [bb_out_chs] + list(decoder_filters[:-1])
         num_blocks = len(self.shortcut_features)
         for i, [filters_in, filters_out] in enumerate(zip(decoder_filters_in, decoder_filters)):
-            print('upsample_blocks[{}] in: {}   out: {}'.format(i, filters_in, filters_out))
+            # print('upsample_blocks[{}] in: {}   out: {}'.format(i, filters_in, filters_out))
             self.upsample_blocks.append(UpsampleBlock(filters_in, filters_out,
                                                       skip_in=shortcut_chs[num_blocks-i-1],
                                                       parametric=parametric_upsampling,
@@ -213,11 +213,11 @@ class Unet(nn.Module):
 
         x, features = self.forward_backbone(*input)
 
-        print(f"After_backbone x.shape {x.shape}")
+        # print(f"After_backbone x.shape {x.shape}")
         cls_res = x
         cls_res = self.avgpool(x)
         cls_res = torch.flatten(cls_res, 1)
-        print(f"cls_res.shape: {cls_res.shape}")
+        # print(f"cls_res.shape: {cls_res.shape}")
 
         out1 = self.fc1(cls_res)
         out1 = self.fc1_1(out1)
@@ -234,7 +234,7 @@ class Unet(nn.Module):
             # print(skip_name, x.shape)
 
         x = self.final_conv(x)
-        print(f"final x.shape: {x.shape}")
+        # print(f"final x.shape: {x.shape}")
 
         # return out1, out2, x
         return out1, out2, out3, x
@@ -267,11 +267,11 @@ class Unet(nn.Module):
         for name, child in self.backbone.named_children():
             x = child(x)
             if name in self.shortcut_features:
-                print(f"x.shape: {x.shape} after {name}")
+                # print(f"x.shape: {x.shape} after {name}")
                 channels.append(x.shape[1])
             if name == self.bb_out_name:
                 out_channels = x.shape[1]
-                print(f"out.shape: {x.shape} after {name}")
+                # print(f"out.shape: {x.shape} after {name}")
                 break
         return channels, out_channels
 

@@ -14,17 +14,15 @@ import numpy as np
 from loss import DiceCELoss, WeightedPosCELoss, ConsitencyLoss, DiceBCELoss, WeightedBCELoss
 from backboned_unet import Unet
 from learning_rate import get_warmup_cosine_lr
-from data_loader import OldData
+from data_loader import OldData, NewData
 from utils import GetItem, GetItemBinary
 from score import DiceScore
 
 
 # ------- Define command line params --------
 parser = argparse.ArgumentParser(description='UG classification')
-parser.add_argument('--test-fold', help='Define fold id for testing, id is between 0 and 4', default=0)
-parser.add_argument('--metadata-file', help='Specify the json file contains data location', default='dir.json')
+parser.add_argument('--metadata-file', help='Specify the json file contains data location', default='/mnt/quanhd/DoAn/unet/dataset/data_dir_endounet.json')
 args = parser.parse_args()
-test_fold = int(args.test_fold)
 metadata_file = args.metadata_file
 
 
@@ -39,7 +37,7 @@ epoch_num = 50
 save_freq = 200
 img_size = (480, 480)
 pretrained = False
-
+ROOT_PATH = "/mnt/tuyenld/data/endoscopy"
 
 # # ------- 1. define tensorboard writer --------
 savepath = './log/' + str(datetime.now().strftime('%Y%m%d%H%M%S'))
@@ -53,8 +51,11 @@ sw6 = SummaryWriter(savepath + '/epoch_hp')
 
 
 # ------- 2. define data loader --------
-d = OldData(metadata_file=metadata_file, test_fold=test_fold, img_size=img_size, segmentation_classes=5)
-data_loader = DataLoader(dataset=d, batch_size=batch, shuffle=True)
+d = NewData(metadata_file=metadata_file, img_size=img_size, segmentation_classes=5, mode="train", root_path=ROOT_PATH)
+train_data_loader = DataLoader(dataset=d, batch_size=batch, shuffle=True)
+
+d = NewData(metadata_file=metadata_file, img_size=img_size, segmentation_classes=5, mode="test", root_path=ROOT_PATH)
+val_data_loader = DataLoader(dataset=d, batch_size=batch, shuffle=False)
 
 
 # ------- 3. define loss & score function --------
@@ -109,7 +110,7 @@ print('device           : %s' % device)
 print('log dir          : %s' % savepath)
 print('model has {} parameters in total'.format(sum(x.numel() for x in net.parameters())))
 
-steps_per_epoch = len(data_loader)
+steps_per_epoch = len(train_data_loader)
 total_steps = steps_per_epoch * epoch_num
 print("Start training...")
 
@@ -139,7 +140,7 @@ for epoch in range(epoch_num):
     total_hp_correct = 0
     total_hp = 0
 
-    for i, data in enumerate(data_loader):     
+    for i, data in enumerate(train_data_loader):     
         img, mask, position_label, damage_label, segment_weight, hp_label = data
 
         num_records_have_pos = (position_label != -1).sum().item()
@@ -192,26 +193,9 @@ for epoch in range(epoch_num):
         loss.backward()
         optimizer.step()
 
-        with torch.no_grad():
-            net.eval()
-            # score = dice_score(seg_out, mask[1], segment_weight)
-            score = dice_score(seg_out, mask, segment_weight)
-            epoch_dice_score.append(score.item())
-
         sw.add_scalar('lr', lr, global_step=global_step)
         sw.add_scalar('detail_loss', loss, global_step=global_step)
         sw.add_scalar('seg_loss', loss3, global_step=global_step)
-
-        if global_step % save_freq == 0 or global_step == total_steps-1:
-            torch.save(net.state_dict(), savepath + '/model-last.pt')
-
-        if global_step % 10 == 0:     
-            pos_acc = np.nan if total_pos == 0 else total_pos_correct/total_pos
-            dmg_acc = np.nan if total_dmg == 0 else total_dmg_correct/total_dmg
-            hp_acc = np.nan if total_hp == 0 else total_hp_correct/total_hp
-            # msg = '%s| %s | step:%d/%d/%d | lr=%.3f | loss=%.3f | pos_loss=%.3f | dmg_loss=%.3f | seg_loss=%.3f | cons_loss=%.3f | pos_acc=%.3f | dmg_acc=%.3f | dice=%.3f' % (savepath, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), global_step+1, epoch+1, epoch_num, optimizer.param_groups[0]['lr'], loss.item(), loss1.item(), loss2.item(), loss3.item(), loss4.item(), pos_acc, dmg_acc, score)
-            msg = '%s| %s | step:%d/%d/%d | lr=%.3f | loss=%.3f | pos_loss=%.3f | dmg_loss=%.3f | hp_loss=%.3f | seg_loss=%.3f | pos_acc=%.3f | dmg_acc=%.3f | hp_acc=%.3f | dice=%.3f' % (savepath, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), global_step+1, epoch+1, epoch_num, optimizer.param_groups[0]['lr'], loss.item(), loss1.item(), loss2.item(), loss4.item(), loss3.item(), pos_acc, dmg_acc, hp_acc, score)
-            print(msg)
 
         global_step += 1
 
@@ -219,19 +203,98 @@ for epoch in range(epoch_num):
     epoch_dmg_acc = np.nan if total_dmg == 0 else total_dmg_correct/total_dmg 
     epoch_hp_acc = np.nan if total_hp == 0 else total_hp_correct/total_hp
         
-    sw1.add_scalar('loss', epoch_loss, global_step-1)
-    sw2.add_scalar('loss', epoch_pos_loss, global_step-1)
-    sw3.add_scalar('loss', epoch_dmg_loss, global_step-1)
-    sw4.add_scalar('loss', epoch_seg_loss, global_step-1)
-    sw6.add_scalar('loss', epoch_hp_loss, global_step-1)
+    sw1.add_scalar('train_epoch_loss', epoch_loss, i)
+    sw2.add_scalar('train_epoch_pos_loss', epoch_pos_loss, i)
+    sw3.add_scalar('train_epoch_dmg_loss', epoch_dmg_loss, i)
+    sw4.add_scalar('train_epoch_seg_loss', epoch_seg_loss, i)
+    sw6.add_scalar('train_epoch_hp_loss', epoch_hp_loss, i)
 
-    sw.add_scalar('dice score', sum(epoch_dice_score)/len(epoch_dice_score), global_step-1)
+    sw2.add_scalar('train_epoch_pos_acc', epoch_pos_acc, i)
+    sw3.add_scalar('train_epoch_dmg_acc', epoch_dmg_acc, i)
+    sw6.add_scalar('train_epoch_hp_acc', epoch_hp_acc, i)
 
-    sw2.add_scalar('acc', epoch_pos_acc, global_step-1)
-    sw3.add_scalar('acc', epoch_dmg_acc, global_step-1)
-    sw6.add_scalar('acc', epoch_hp_acc, global_step-1)
+    epoch_loss = 0
+    epoch_pos_loss = 0
+    epoch_dmg_loss = 0
+    epoch_seg_loss = 0
+    epoch_hp_loss = 0
+    epoch_cons_loss = 0
+    epoch_dice_score = []
 
-    if epoch_loss < best_epoch_loss:
-        print('Loss decreases from %f to %f, saving new best...' % (best_epoch_loss, epoch_loss))
-        best_epoch_loss = epoch_loss
-        torch.save(net.state_dict(), savepath + '/model-best.pt')
+    # total_pos: total number of records that have position label
+    total_pos_correct = 0
+    total_pos = 0
+
+    # total_dmg: total number of records that have damage label
+    total_dmg_correct = 0
+    total_dmg = 0
+
+    # total_hp: total number of records that have hp label
+    total_hp_correct = 0
+    total_hp = 0
+
+    for i, data in enumerate(val_data_loader):     
+        img, mask, position_label, damage_label, segment_weight, hp_label = data
+
+        num_records_have_pos = (position_label != -1).sum().item()
+        total_pos += num_records_have_pos
+
+        num_records_have_dmg = (damage_label != -1).sum().item()
+        total_dmg += num_records_have_dmg
+
+        num_records_have_hp = (hp_label != -1).sum().item()
+        total_hp += num_records_have_hp
+   
+        if device == 'cuda':
+            img = img.float().cuda()
+            # mask = (mask[0].long().cuda(), mask[1].float().cuda())
+            mask = mask.float().cuda()
+            position_label = position_label.cuda()
+            damage_label = damage_label.cuda()
+            segment_weight = segment_weight.cuda()
+            hp_label = hp_label.float().cuda()
+        with torch.no_grad():
+            net.eval()
+            pos_out, dmg_out, hp_out, seg_out = net(img)
+        
+        loss1 = cls_loss(pos_out, position_label)
+        loss2 = cls_loss(dmg_out, damage_label)
+        loss3 = seg_loss(seg_out, mask, segment_weight)
+        loss4 = bi_cls_loss(hp_out, hp_label)
+
+        loss = loss1 + loss2 + loss3 + loss4
+        
+        epoch_loss += loss
+        epoch_pos_loss += loss1
+        epoch_dmg_loss += loss2
+        epoch_seg_loss += loss3
+        epoch_hp_loss += loss4
+        
+        # epoch_cons_loss += loss4
+        total_pos_correct += get_item(pos_out, position_label)
+        total_dmg_correct += get_item(dmg_out, damage_label)
+        total_hp_correct += get_item_binary(hp_out, hp_label)
+
+        score = dice_score(seg_out, mask, segment_weight)
+        epoch_dice_score.append(score.item())
+
+        sw.add_scalar('lr', lr, global_step=global_step)
+        sw.add_scalar('detail_loss', loss, global_step=global_step)
+        sw.add_scalar('seg_loss', loss3, global_step=global_step)
+
+
+    epoch_pos_acc = np.nan if total_pos == 0 else total_pos_correct/total_pos
+    epoch_dmg_acc = np.nan if total_dmg == 0 else total_dmg_correct/total_dmg 
+    epoch_hp_acc = np.nan if total_hp == 0 else total_hp_correct/total_hp
+        
+    sw1.add_scalar('val_epoch_loss', epoch_loss, global_step-1)
+    sw2.add_scalar('val_epoch_pos_loss', epoch_pos_loss, global_step-1)
+    sw3.add_scalar('val_epoch_dmg_loss', epoch_dmg_loss, global_step-1)
+    sw4.add_scalar('val_epoch_seg_loss', epoch_seg_loss, global_step-1)
+    sw6.add_scalar('val_epoch_hp_loss', epoch_hp_loss, global_step-1)
+
+    sw.add_scalar('val dice score', sum(epoch_dice_score)/len(epoch_dice_score), global_step-1)
+
+    sw2.add_scalar('val_epoch_pos_acc', epoch_pos_acc, global_step-1)
+    sw3.add_scalar('val_epoch_dmg_acc', epoch_dmg_acc, global_step-1)
+    sw6.add_scalar('val_epoch_hp_acc', epoch_hp_acc, global_step-1)

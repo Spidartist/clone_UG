@@ -11,6 +11,139 @@ import albumentations as A
 from utils import FDA_source_to_target_np
 
 
+class NewData(Dataset):
+    """
+    Data loader for binary-segmentation training
+    """
+    def __init__(self, root_path, metadata_file='/mnt/quanhd/DoAn/unet/dataset/data_dir_endounet.json', img_size=(320, 320), segmentation_classes=5, mode="train"):
+        self.train_samples = []
+        self.test_samples = []
+        self.img_size = img_size
+        self.root_path = root_path
+        self.segmentation_classes = segmentation_classes
+        self.mode = mode
+
+        with open(metadata_file) as f:
+            dirs = json.load(f)['dirs']
+
+
+        for dir_info in dirs:
+            type = dir_info['type']
+            position_label = dir_info.get('position_label', -1)
+            damage_label = dir_info.get('damage_label', -1)
+            seg_label = dir_info.get('segmentation_label', 0)
+            location = dir_info['location']
+            name = dir_info.get('name', '')
+            type_giai_phau = dir_info.get('type_giai_phau', '')
+            type_ton_thuong = dir_info.get('type_ton_thuong', '')
+            hp_label = -1
+
+            if type == 'segmentation':
+                if name == "tonthuong":
+                    with open(location) as f:
+                        data = json.load(f)
+                    train_image_paths = data[type_ton_thuong]["train"]["images"]
+                    train_mask_paths = data[type_ton_thuong]["train"]["masks"]
+
+                    test_image_paths = data[type_ton_thuong]["test"]["images"]
+                    test_mask_paths = data[type_ton_thuong]["test"]["masks"]
+                    print(f"Processed {type_ton_thuong}")
+                if name == "polyp":
+                    continue
+                for img_path, mask_path in zip(train_image_paths, train_mask_paths):
+                    self.train_samples.append([img_path, mask_path, position_label, damage_label, seg_label, hp_label])
+                for img_path, mask_path in zip(test_image_paths, test_mask_paths):
+                    self.test_samples.append([img_path, mask_path, position_label, damage_label, seg_label, hp_label])
+            elif type == 'classification':
+                with open(location) as f:
+                    data = json.load(f)
+                if name == "vitrigiaiphau":
+                    train_image_paths = data[type_giai_phau]["train"]
+                    test_image_paths = data[type_giai_phau]["test"]
+                    for img_path in train_image_paths:
+                        self.train_samples.append([img_path, None, position_label, damage_label, seg_label, hp_label])
+                    for img_path in test_image_paths:
+                        self.test_samples.append([img_path, None, position_label, damage_label, seg_label, hp_label])
+                    print(f"Processed {type_giai_phau}")
+                if name == "hp":
+                    for e in data["train"]:
+                        self.train_samples.append([e["image"], None, position_label, damage_label, seg_label, e["label"]])
+                    for e in data["test_positive"]["images"]:
+                        self.train_samples.append([e, None, position_label, damage_label, seg_label, data["test_positive"]["label"]])
+                    for e in data["test_negative"]["images"]:
+                        self.train_samples.append([e, None, position_label, damage_label, seg_label, data["test_negative"]["label"]])
+                    print(f"Processed {name}")
+        if self.mode == "train":
+            self.samples = self.train_samples
+        else:
+            self.samples = self.test_samples
+
+    def aug(self, image, mask):
+        img_size = self.img_size
+        # t = A.Compose([
+        #     A.Resize(img_size[0], img_size[1])
+        # ])
+        if self.mode == 'train':
+            t1 = A.Compose([A.Resize(img_size[0], img_size[1]),])
+            resized = t1(image=image, mask=mask)
+            image = resized['image']
+            mask = resized['mask']
+            t = A.Compose([                
+                A.HorizontalFlip(p=0.7),
+                A.VerticalFlip(p=0.7),
+                A.Rotate(interpolation=cv2.BORDER_CONSTANT, p=0.7),
+                A.ShiftScaleRotate(border_mode=cv2.BORDER_CONSTANT, shift_limit=0.5, scale_limit=0.2, p=0.7),
+                A.ShiftScaleRotate(border_mode=cv2.BORDER_CONSTANT, shift_limit=0, scale_limit=(-0.1, 0.1), rotate_limit=0, p=0.35),
+                A.MotionBlur(p=0.2),
+                A.HueSaturationValue(p=0.2),                
+            ], p=0.5)
+
+        elif self.mode == 'test':
+            t = A.Compose([
+                A.Resize(img_size[0], img_size[1])
+            ])
+
+        return t(image=image, mask=mask)
+
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        img_path, mask_path, position_label, damage_label, seg_label, hp_label = self.samples[idx]
+        # print(img_path, mask_path)
+        # print(img_path, mask_path, position_label, damage_label, seg_label, hp_label)
+        img_path = os.path.join(self.root_path, img_path)
+        img = cv2.imread(img_path).astype(np.float32)
+
+        if mask_path is not None:
+            mask_path = os.path.join(self.root_path, mask_path)
+            orin_mask = cv2.imread(mask_path).astype(np.float32)
+        else:
+            orin_mask = img
+
+        augmented = self.aug(img, orin_mask)
+        img = augmented['image']
+        orin_mask = augmented['mask']
+
+        img = torch.from_numpy(img.copy())
+        img = img.permute(2, 0, 1)
+        orin_mask = torch.from_numpy(orin_mask.copy())
+        orin_mask = orin_mask.permute(2, 0, 1)
+
+        img /= 255.
+        orin_mask = orin_mask.mean(dim=0, keepdim=True)/255.
+
+        orin_mask[orin_mask <= 0.5] = 0
+        orin_mask[orin_mask > 0.5] = 1
+
+        if mask_path is None:
+            segment_weight = 0
+        else:
+            segment_weight = seg_label
+
+        return img, orin_mask, position_label, damage_label, segment_weight, hp_label
+
 class OldData(Dataset):
     """
     Data loader for binary-segmentation training
